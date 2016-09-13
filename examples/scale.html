@@ -34,12 +34,16 @@
         bottom: 0;
         width: 40px;
 }
+   
+#readout {display:inline-block;margin-right:10px;}
+#units {display:inline-block;} 
+
 </style>
 
 </head>
 <body>
   
-   <h1>Loadcell Demo</h1>
+   <h3>Loadcell Demo</h3>
 
   <p>Use with sketch <a href="https://gist.github.com/dwblair/705b71296556c8a407e7eca7582c3ad5">webjack_loadcell.ino</a>.</p>
      
@@ -48,13 +52,17 @@
         <div id="chart"></div>
 </div>
 
-     <h3 id="readout">Loadcell Demo</h3>
-     
-<p>Scale Factor (lbs / input unit):</p>
-<p id="scale_factor">1.</p>
 
-<p>New calibration weight (lbs):</p>
-<input type="text" id="weight" value="10">
+     <h1 id="readout">0.</h1>
+     <h1 id="units">lbs</h1>
+     
+ <!--
+<p id ="scale_label">Scale Factor (lbs / input unit):</p>
+<p id="scale_factor">1.</p>
+-->
+
+<p>New calibration weight:</p>
+<input type="text" id="weight" value="10"> lbs
  <button id="set">Set</button>
 
 <p>
@@ -68,7 +76,7 @@
 
 <div class="webjack-log"></div>
 
-  <p class="hint">Uses <a href="https://github.com/publiclab/webjack">WebJack</a> is a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack.
+  <p class="hint">Audio input via <a href="https://github.com/publiclab/webjack">WebJack</a>, a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack.
   </p>
   
 
@@ -80,6 +88,9 @@
     var calibrationWeight=1.;
     var maxGraph=100.;
     var units="lbs";
+    var referenceUpper=20.;
+    var referenceLower=10.;
+    
     
     var connection;
 
@@ -91,7 +102,7 @@
    calibrationWeight=$("#weight").val();
   scaleFactor=parseFloat(calibrationWeight/currentRaw);
   //maxGraph=5*parseFloat(calibrationWeight);  // doesn't work?
-  $( "#scale_factor" ).text(scaleFactor); 
+  $( "#scale_factor" ).text(scaleFactor.toFixed(2)); 
 });
 
 
@@ -120,6 +131,9 @@
         $('#readout').text(currentRaw.toFixed(2));
         
         var datum = {one: value};
+        
+        //datum.two = parseFloat(referenceUpper).toFixed(2);
+          //      datum.three = parseFloat(referenceLower).toFixed(2);
 
 	graph.series.addData(datum);
 	graph.render();
@@ -175,27 +189,28 @@ var tv = 100;
 
 var graph = new Rickshaw.Graph( {
 	element: document.getElementById("chart"),
-	width: 300,
-	height: 100,
+	width: 500,
+	height: 300,
 	renderer: 'line',
-	max:maxGraph,
-	min:-10,
+	//max:maxGraph,
+	//min:-10,
 	series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
 		timeInterval: tv,
 		maxDataPoints: 100,
-		color: 'steelblue',
 		timeBase: new Date().getTime() / 1000
 	}) 
 } );
 
+
 var y_ticks = new Rickshaw.Graph.Axis.Y( {
 	graph: graph,
 	orientation: 'left',
-
+    ticks: 5,
 	tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-	  tickValues: [0,25,50,75,100], // values to use/display
+	//  tickValues: [0,25,50,75,100], // values to use/display
 	element: document.getElementById('y_axis')
 } );
+
 
 
   </script>
