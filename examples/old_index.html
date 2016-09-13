@@ -36,6 +36,8 @@
   <script>
 
     var connection;
+    
+    var load_scale;
 
     jQuery(document).ready(function($) {
 
@@ -58,7 +60,8 @@
 
       $('.send').click(function () {
         var text = $('.webjack').val();
-        connection.send(text);
+        //connection.send(text);
+        loadScale=parseFloat(text);
         console.log('WebJack to Arduino: ' + text);
       });
 
