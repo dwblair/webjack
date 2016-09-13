@@ -45,20 +45,30 @@
   
    <h3>Loadcell Demo</h3>
 
+<div id="chart_container">
   <p>Use with sketch <a href="https://gist.github.com/dwblair/705b71296556c8a407e7eca7582c3ad5">webjack_loadcell.ino</a>.</p>
+     </div>
+     
      
 <div id="chart_container">
         <div id="y_axis"></div>
         <div id="chart"></div>
 </div>
 
-
+<div id="chart_container">
      <h1 id="readout">0.</h1>
      <h1 id="units">lbs</h1>
+     </div>
      
- <!--
-<p id ="scale_label">Scale Factor (lbs / input unit):</p>
-<p id="scale_factor">1.</p>
+<!--
+<p>To Calibrate:<p>
+ <ul>
+      <li> Remove all weight from the sensor, and hit the 'Tare' button. </li>
+      <li>Apply a known weight to the load cell.</li>
+      <li>Enter this weight in "New calibration weight" below, selecting proper units, and click "Set".
+      </li>
+      <li>This will generate a new scale factor, which will be applied to the input to generate the display above.</li>
+    </ul>
 -->
 
 <p>New calibration weight:</p>
@@ -74,11 +84,15 @@
 <p>
 <p>
 
+<!--
   <select id="prof" onchange="changeProfile(this.value)">
     <option value="0">SoftModem</option>
     <option value="1">LowFrequencies</option>
     <option value="2">Browser</option>
   </select>
+-->
+
+<p>Raw input from sensor:</p>
 
 <div class="webjack-log"></div>
 
@@ -99,6 +113,8 @@
     
     
     var connection;
+    
+    //
 
     jQuery(document).ready(function($) {
 
@@ -153,6 +169,7 @@
 	}
 	
         console.log('Arduino to WebJack: ' + data);
+        
       });
 
       $('.send').click(function () {
@@ -195,6 +212,7 @@
           break;
       }
       connection.setProfile(profile);
+
     }
 
 
