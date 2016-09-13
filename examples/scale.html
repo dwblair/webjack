@@ -62,7 +62,13 @@
 -->
 
 <p>New calibration weight:</p>
-<input type="text" id="weight" value="10"> lbs
+<input type="text" id="weight" value="10"> 
+
+<select id="single">
+  <option>lbs</option>
+  <option>kg</option>
+</select>
+
  <button id="set">Set</button>
 
 <p>
@@ -100,6 +106,10 @@
     $( "#set" ).click(function() {
   //var text = $( this ).text();
    calibrationWeight=$("#weight").val();
+   
+   units = $( "#single" ).val();
+   $( "#units" ).text(units);
+   
   scaleFactor=parseFloat(calibrationWeight/currentRaw);
   //maxGraph=5*parseFloat(calibrationWeight);  // doesn't work?
   $( "#scale_factor" ).text(scaleFactor.toFixed(2)); 
@@ -122,15 +132,18 @@
       connection.listen(function(data) {
         log.apend(data);
         
-        var value = parseFloat(data)*scaleFactor;
+        var value = parseFloat(data);
+        
                 
         if (isNaN(value)==false) {
         
         currentRaw=value;
         
-        $('#readout').text(currentRaw.toFixed(2));
+        var trueReading = currentRaw*scaleFactor;
         
-        var datum = {one: value};
+        $('#readout').text(trueReading.toFixed(2));
+        
+        var datum = {one: trueReading};
         
         //datum.two = parseFloat(referenceUpper).toFixed(2);
           //      datum.three = parseFloat(referenceLower).toFixed(2);
