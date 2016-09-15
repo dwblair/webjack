@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">                                                                                         
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"/>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>WebJack</title>
+
+  <script src="jquery.min.js"></script>
+  <script src="adapter.js"></script>
+
+  <script src="../dist/webjack.js" type="text/javascript"></script>
+  
+  <script src="../rickshaw/d3.v3.js"></script>
+	<script src="../rickshaw/rickshaw.js"></script>
+		<link type="text/css" rel="stylesheet" href="../rickshaw/graph.css">
+	<link type="text/css" rel="stylesheet" href="../rickshaw/detail.css">
+	<link type="text/css" rel="stylesheet" href="../rickshaw/legend.css">
+	<link type="text/css" rel="stylesheet" href="../extensions.css">
+	
+	
+  <link href="examples.css" rel="stylesheet">
+<style>
+#chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        position: relative;
+        left: 40px;
+}
+#y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+}
+   
+#readout {display:inline-block;margin-right:10px;}
+#units {display:inline-block;} 
+
+</style>
+
+</head>
+<body>
+  
+   <h3>WebJack Sensor Demo</h3>
+
+  <p class="hint">Audio input via <a href="https://github.com/publiclab/webjack">WebJack</a>, a JavaScript library that uses an audio modem to communicate with an Arduino µC via headphone jack.
+  </p>
+  
+  <div></div>
+     
+<div id="chart_container">
+        <div id="y_axis"></div>
+        <div id="chart"></div>
+</div>
+
+<div id="chart_container">
+     <h1 id="readout">0.</h1>
+     <!--<h1 id="units">lbs</h1>-->
+     </div>
+     
+<!--
+<p>To Calibrate:<p>
+ <ul>
+      <li> Remove all weight from the sensor, and hit the 'Tare' button. </li>
+      <li>Apply a known weight to the load cell.</li>
+      <li>Enter this weight in "New calibration weight" below, selecting proper units, and click "Set".
+      </li>
+      <li>This will generate a new scale factor, which will be applied to the input to generate the display above.</li>
+    </ul>
+-->
+
+<!--
+<p>New calibration weight:</p>
+<input type="text" id="weight" value="10"> 
+
+<select id="single">
+  <option>lbs</option>
+  <option>kg</option>
+</select>
+
+ <button id="set">Set</button>
+
+<p>
+<p>
+-->
+
+
+  <select id="prof" onchange="changeProfile(this.value)">
+    <option value="0">SoftModem</option>
+    <option value="1">LowFrequencies</option>
+    <option value="2">Browser</option>
+  </select>
+
+
+<p>SoftModem input:</p>
+
+<div class="webjack-log"></div>
+
+
+
+  <script>
+
+    var recorded = new Array();
+    var scaleFactor=1.;
+    var currentRaw=1.;
+    var calibrationWeight=1.;
+    var maxGraph=100.;
+    var units="lbs";
+    var referenceUpper=20.;
+    var referenceLower=10.;
+    
+    
+    var connection;
+    
+    //
+
+    jQuery(document).ready(function($) {
+
+
+// set the weight
+    $( "#set" ).click(function() {
+  //var text = $( this ).text();
+   calibrationWeight=$("#weight").val();
+   
+   units = $( "#single" ).val();
+   $( "#units" ).text(units);
+   
+  scaleFactor=parseFloat(calibrationWeight/currentRaw);
+  //maxGraph=5*parseFloat(calibrationWeight);  // doesn't work?
+  $( "#scale_factor" ).text(scaleFactor.toFixed(2)); 
+});
+
+
+      var log = $('.webjack-log');
+      log.apend = function(data){
+        log.append(data)
+        log.append('<br>');
+        log.scrollTop(log[0].scrollHeight);
+      }
+
+      var profile = WebJack.Profiles[getUrlParameter('profile')];
+      
+      console.log('loading profile: ', profile);
+      
+      connection = new WebJack.Connection(profile);
+
+      connection.listen(function(data) {
+        log.apend(data);
+        
+        var value = parseFloat(data);
+        
+                
+        if (isNaN(value)==false) {
+        
+        currentRaw=value;
+        
+        var trueReading = currentRaw*scaleFactor;
+        
+        $('#readout').text(trueReading.toFixed(2));
+        
+        var datum = {one: trueReading};
+        
+        //datum.two = parseFloat(referenceUpper).toFixed(2);
+          //      datum.three = parseFloat(referenceLower).toFixed(2);
+
+	graph.series.addData(datum);
+	graph.render();
+	}
+	
+        console.log('Arduino to WebJack: ' + data);
+        
+      });
+
+      $('.send').click(function () {
+        var text = $('.userinput').val();
+       // connection.send(text);
+        console.log('WebJack to Arduino: ' + text);
+      });
+
+    });
+
+    function getUrlParameter(sParam) {
+
+      var sPageURL = window.location.search.substring(1);
+      var sURLVariables = sPageURL.split('&');
+     
+      for (var i = 0; i < sURLVariables.length; i++) {
+     
+        var sParameterName = sURLVariables[i].split('=');
+     
+        if (sParameterName[0] == sParam) {
+          return sParameterName[1];
+        }
+     
+      }
+
+    }
+
+    function changeProfile(p){
+      var profile = WebJack.Profiles.SoftModem;
+
+      switch (p){
+        case "0":
+          profile = WebJack.Profiles.SoftModem;
+          break;
+        case "1":
+          profile = WebJack.Profiles.SoftModemLowFrequencies;
+          break;
+        case "2":
+          profile = WebJack.Profiles.Browser;
+          break;
+      }
+      connection.setProfile(profile);
+
+    }
+
+
+var tv = 100;
+
+var graph = new Rickshaw.Graph( {
+	element: document.getElementById("chart"),
+	width: 750,
+	height: 300,
+	renderer: 'line',
+	max:35,
+	min:0,
+	series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
+		timeInterval: tv,
+		maxDataPoints: 100,
+		timeBase: new Date().getTime() / 1000
+	}) 
+} );
+
+
+var y_ticks = new Rickshaw.Graph.Axis.Y( {
+	graph: graph,
+	orientation: 'left',
+    ticks: 8,
+	tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+	//  tickValues: [0,25,50,75,100], // values to use/display
+	element: document.getElementById('y_axis')
+} );
+
+
+var data = [
+				{
+					"title": "Book title 1",
+					"author": "Name1 Surname1"
+				},
+				{
+					"title": "Book title 2",
+					"author": "Name2 Surname2"
+				},
+				{
+					"title": "Book title 3",
+					"author": "Name3 Surname3"
+				},
+				{
+					"title": "Book title 4",
+					"author": "Name4 Surname4"
+				}
+			];
+			
+            // prepare CSV data
+			var csvData = new Array();
+			csvData.push('3','2','1');
+			//csvData.push('"Book title","Author"');
+			data.forEach(function(item, index, array) {
+				csvData.push('"' + item.title + '","' + item.author + '"');
+			});
+			
+			// download stuff
+			var fileName = "data.csv";
+			var buffer = csvData.join("\n");
+			var blob = new Blob([buffer], {
+				"type": "text/csv;charset=utf8;"			
+			});
+			var link = document.createElement("a");
+			
+			if(link.download !== undefined) { // feature detection
+				// Browsers that support HTML5 download attribute
+				link.setAttribute("href", window.URL.createObjectURL(blob));
+				link.setAttribute("download", fileName);
+			}
+			else if(navigator.msSaveBlob) { // IE 10+
+				navigator.msSaveBlob(blob, fileName);
+			}
+			else { 
+				// it needs to implement server side export
+				link.setAttribute("href", "http://www.example.com/export");
+			}
+
+			link.innerHTML = "Export to CSV";
+			document.body.appendChild(link);
+			
+  </script>
+
+</body>
+</html>
